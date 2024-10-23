@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apollo 13 Feedback Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="form-header">
+            <h1>Apollo 13</h1>
+        </div>
+
+        <div v-for="(subject, index) in subjects" :key="index" class="subject-container">
+            <div class="dropdown-container">
+                <label :for="'subject' + index">AINE VALIK:</label>
+                <select v-model="subject.selected" :id="'subject' + index">
+                    <option value="" disabled selected>Vali aine</option>
+                    <option v-for="option in availableSubjects(index)" :key="option" :value="option">{{ option }}</option>
+                </select>
+                <button @click="removeSubject(index)" v-if="subjects.length > 1">Eemalda</button>
+            </div>
+
+            <div class="rating-container">
+                <p>KUIDAS MEELDIS?</p>
+                <div class="star-rating-box">
+                    <div class="stars">
+                        <span v-for="n in 5" :key="n" class="star" :class="{ selected: n <= subject.rating }" @click="setRating(n, index)">
+                            &#9733;
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button @click="addSubject" class="add-button" :disabled="!canAddMoreSubjects">+</button>
+
+
+        <div class="feedback-form">
+            <label for="feedback">Kirjelda oma kogemust</label>
+            <textarea v-model="feedbackText" id="feedback" rows="4" cols="50" placeholder="Kirjuta siia..."></textarea>
+        </div>
+
+        <div class="feedback">
+            <p>ÕPETAJA</p>
+            <button @click="submitFeedback" class="feedback-btn" :disabled="!canSubmit">SAADA HINNANG!</button>
+            <h2 v-if="thankyouMessage" id="thankyou-msg">Aitäh hinnangu eest!</h2>
+        </div>
+
+        <div class="alert-message" v-if="showAlert" style="color: red;">
+            Palun täitke kõik nõutud väljad!
+        </div>
+
+        <div class="footer">
+            <p>Apollo 13 ja kasutajatingimused ja privaatsustingimused</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            // Kõik võimalikud ained
+            subjectsList: ['Matemaatika', 'Eesti keel', 'Psühhotroopsete ainete makrodoosimine', 'Heebrea keel IV'],
+            subjects: [{ selected: '', rating: 0 }], // Alustame ühe tühja valikuga
+            feedbackText: '',
+            thankyouMessage: false,
+            showAlert: false,
+            maxSubjects: 4 // Lubatud maksimaalne ainete arv
+        };
+    },
+    computed: {
+        canSubmit() {
+            return this.subjects.every(subject => subject.selected && subject.rating > 0);
+        },
+        canAddMoreSubjects() {
+            // Kontrollib, kas aineid on vähem kui maxSubjects (4)
+            return this.subjects.length < this.maxSubjects;
+        }
+    },
+    methods: {
+        // Tagastab ained, mis pole veel valitud
+        availableSubjects(currentIndex) {
+            const selectedSubjects = this.subjects.map(subject => subject.selected);
+            return this.subjectsList.filter(subject => !selectedSubjects.includes(subject) || selectedSubjects[currentIndex] === subject);
+        },
+        setRating(value, index) {
+            this.subjects[index].rating = value;
+        },
+        submitFeedback() {
+            if (this.canSubmit) {
+                this.thankyouMessage = true;
+                this.showAlert = false;
+            } else {
+                this.showAlert = true;
+            }
+        },
+        addSubject() {
+            if (this.canAddMoreSubjects) {
+                this.subjects.push({ selected: '', rating: 0 });
+            }
+        },
+        removeSubject(index) {
+            this.subjects.splice(index, 1);
+        }
+    }
+}).mount('#app');
+
+
+    </script>
+</body>
+</html>
